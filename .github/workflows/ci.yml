@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - codex/public-raptor-runtime
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            scripts/snapshot/package-lock.json
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install snapshot dependencies
+        run: npm --prefix scripts/snapshot ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Audit high severity app dependencies
+        run: npm audit --audit-level=high
+
+      - name: Audit high severity snapshot dependencies
+        run: npm --prefix scripts/snapshot audit --audit-level=high
+
+      - name: Test RAPTOR runtime
+        run: npm run raptor:test
+
+      - name: Test snapshot generator
+        run: npm run snapshot:test

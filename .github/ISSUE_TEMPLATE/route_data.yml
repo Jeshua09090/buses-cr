@@ -1,0 +1,32 @@
+name: Route or stop data
+description: Share a correction for a bus route, stop, transfer, or schedule window.
+title: "[Route data]: "
+labels:
+  - data
+body:
+  - type: input
+    id: corridor
+    attributes:
+      label: Route or corridor
+      placeholder: Cartago centro to Taras, San Jose connector, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: What should change?
+      description: Describe the stop, route variant, transfer point, or timing issue.
+    validations:
+      required: true
+  - type: textarea
+    id: local_reason
+    attributes:
+      label: Why is this locally correct?
+      description: Add local context, source notes, or how you verified it.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example trip
+      description: If this affects trip planning, include origin, destination, and approximate departure time.

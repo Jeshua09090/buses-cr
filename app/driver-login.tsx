@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
+import { supabase } from '@/lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function DriverLoginScreen() {
   const [email, setEmail] = useState('');
@@ -17,8 +17,8 @@ export default function DriverLoginScreen() {
   async function signInWithEmail() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password,
     });
 
     if (error) {
@@ -32,8 +32,8 @@ export default function DriverLoginScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={styles.backButton}
         onPress={() => router.replace('/welcome')}
       >
         <Ionicons name="arrow-back" size={28} color="white" />
@@ -73,8 +73,8 @@ export default function DriverLoginScreen() {
             />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={signInWithEmail}
             disabled={loading}
           >

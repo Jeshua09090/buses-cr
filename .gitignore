@@ -2,9 +2,14 @@
 
 # dependencies
 node_modules/
+local-snapshots/
+.claude/
+.codex/
+skill-observations/
 
 # Expo
 .expo/
+.expo-web-*.log
 dist/
 web-build/
 expo-env.d.ts
@@ -33,6 +38,8 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+.env.backup*
+.mcp.json
 
 # typescript
 *.tsbuildinfo
@@ -42,3 +49,20 @@ app-example
 # generated native folders
 /ios
 /android
+
+# local generated / tooling artifacts
+.generated/
+.npm-cache/
+.playwright-cli/
+output/
+.tmp*
+AGENTS.md
+supabase/seed.sql
+supabase/.temp/
+supabase/.branches/
+
+# local validation evidence artifacts
+.planning/phases/01-raptor-runtime/android-*.png
+.planning/phases/01-raptor-runtime/android-*.xml
+.planning/phases/01-raptor-runtime/android-*-logcat.txt
+.planning/phases/01-raptor-runtime/round9-web-server.*.log

@@ -9,8 +9,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+type HasStartedLocationUpdatesAsync = (taskName: string) => Promise<boolean>;
+type StopLocationUpdatesAsync = (taskName: string) => Promise<void>;
+type RequestBackgroundPermissionsAsync = () => Promise<Location.LocationPermissionResponse>;
+type StartLocationUpdatesAsync = (
+  taskName: string,
+  options: Location.LocationTaskOptions,
+) => Promise<void>;
 
 export default function DriverHomeScreen() {
   const [isTransmitting, setIsTransmitting] = useState(false);
@@ -19,31 +27,38 @@ export default function DriverHomeScreen() {
   const [locationSubscription, setLocationSubscription] = useState<Location.LocationSubscription | null>(null);
   const { clearRole, session } = useAuth();
   const softPanelColor = useThemeColor({ light: '#f1f5f9', dark: '#1e293b' }, 'background');
-  
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentStepRef = useRef(0);
+  const isWebRuntime = process.env.EXPO_OS === 'web';
 
-  useEffect(() => {
-    return () => {
-      stopTracking();
-    };
-  }, []);
-
-  const stopTracking = async () => {
+  const stopTracking = useCallback(async () => {
     if (locationSubscription) {
       locationSubscription.remove();
       setLocationSubscription(null);
     }
-    
+
     if (simulationIntervalRef.current) {
       clearInterval(simulationIntervalRef.current);
       simulationIntervalRef.current = null;
     }
-    
-    const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (hasStarted) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+
+    if (!isWebRuntime) {
+      const hasStartedLocationUpdatesAsync = (Location as Record<string, unknown>)
+        .hasStartedLocationUpdatesAsync as HasStartedLocationUpdatesAsync | undefined;
+      const stopLocationUpdatesAsync = (Location as Record<string, unknown>)
+        .stopLocationUpdatesAsync as StopLocationUpdatesAsync | undefined;
+
+      if (
+        typeof hasStartedLocationUpdatesAsync === 'function' &&
+        typeof stopLocationUpdatesAsync === 'function'
+      ) {
+        const hasStarted = await hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStarted) {
+          await stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      }
     }
 
     if (channelRef.current) {
@@ -51,7 +66,13 @@ export default function DriverHomeScreen() {
       channelRef.current = null;
     }
     setIsSimulating(false);
-  };
+  }, [isWebRuntime, locationSubscription]);
+
+  useEffect(() => {
+    return () => {
+      void stopTracking();
+    };
+  }, [stopTracking]);
 
   const startSimulation = async () => {
     if (isTransmitting) {
@@ -63,29 +84,29 @@ export default function DriverHomeScreen() {
     setLocationError(null);
     setIsTransmitting(true);
     setIsSimulating(true);
-    Alert.alert('Simulación Iniciada', 'Transmitiendo ruta de Cartago a Taras...');
+    Alert.alert('Simulación iniciada', 'Transmitiendo ruta de Cartago a Taras...');
 
-    const routeId = 'ruta_1'; 
+    const routeId = 'ruta_1';
     const driverId = session?.user?.id || 'simulated_driver_taras';
     const channel = supabase.channel(`route_tracking:${routeId}`, {
       config: { broadcast: { self: true } },
     });
-    
+
     channel.subscribe();
     channelRef.current = channel;
 
     currentStepRef.current = 0;
 
-    // Send a point every 1.5 seconds to simulate movement
+    // Send a point every 1.5 seconds to simulate movement.
     simulationIntervalRef.current = setInterval(() => {
       if (currentStepRef.current >= DETAILED_ROUTE.length) {
-        currentStepRef.current = 0; // Loop the simulation
+        currentStepRef.current = 0;
       }
 
       const point = DETAILED_ROUTE[currentStepRef.current];
       const [lng, lat] = point;
 
-      console.log(`[Simulación] 📡 GPS Update: Lat ${lat}, Lng ${lng}`);
+      console.log(`[Simulación] GPS update: Lat ${lat}, Lng ${lng}`);
 
       if (channelRef.current) {
         channelRef.current.send({
@@ -93,14 +114,14 @@ export default function DriverHomeScreen() {
           event: 'location_update',
           payload: {
             driver_id: driverId,
-            lat: lat,
-            lng: lng,
+            lat,
+            lng,
             heading: 0,
             speed: 40,
             timestamp: Date.now(),
-            status: 'en_ruta_simulada'
+            status: 'en_ruta_simulada',
           },
-        }).catch(err => console.error("Error broadcasting simulation:", err));
+        }).catch(err => console.error('Error broadcasting simulation:', err));
       }
 
       currentStepRef.current += 1;
@@ -111,47 +132,53 @@ export default function DriverHomeScreen() {
     if (isTransmitting) {
       await stopTracking();
       setIsTransmitting(false);
-      Alert.alert('Transmisión Detenida', 'La transmisión de tu ubicación ha sido detenida.');
+      Alert.alert('Transmisión detenida', 'La transmisión de tu ubicación se detuvo.');
     } else {
       setLocationError(null);
-      
+
       const { status: notifStatus } = await Notifications.requestPermissionsAsync();
       if (notifStatus !== 'granted') {
         Alert.alert(
           'Permiso de Notificaciones',
-          'Las notificaciones están bloqueadas. Esto puede impedir que la app siga transmitiendo cuando la minimizas.'
+          'Las notificaciones están bloqueadas. Esto puede impedir que la app siga transmitiendo cuando la minimizas.',
         );
       }
-      
-      let { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+
+      const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
       if (fgStatus !== 'granted') {
         setLocationError('Permiso de ubicación denegado. No se puede transmitir.');
         Alert.alert('Error', 'Se requiere acceso a la ubicación para transmitir.');
         return;
       }
 
-      let { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (bgStatus !== 'granted') {
+      let bgStatus: Location.PermissionStatus | null = null;
+      const requestBackgroundPermissionsAsync = (Location as Record<string, unknown>)
+        .requestBackgroundPermissionsAsync as RequestBackgroundPermissionsAsync | undefined;
+      if (!isWebRuntime && typeof requestBackgroundPermissionsAsync === 'function') {
+        const backgroundPermission = await requestBackgroundPermissionsAsync();
+        bgStatus = backgroundPermission.status;
+      }
+      if (!isWebRuntime && bgStatus !== 'granted') {
         Alert.alert(
           'Advertencia',
-          'La app no tiene permisos para transmitir en segundo plano. Si minimizas la app, el GPS se detendrá.'
+          'La app no tiene permisos para transmitir en segundo plano. Si minimizas la app, el GPS se detendrá.',
         );
       }
 
       setIsTransmitting(true);
-      Alert.alert('Transmisión Iniciada', 'Conectando con el satélite y transmitiendo...');
+      Alert.alert('Transmisión iniciada', 'Conectando con el GPS y transmitiendo...');
 
-      const routeId = 'ruta_1'; 
+      const routeId = 'ruta_1';
       const driverId = session?.user?.id || 'anonymous_driver';
       const channel = supabase.channel(`route_tracking:${routeId}`, {
         config: {
           broadcast: { self: true },
         },
       });
-      
+
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`✅ Driver connected to broadcast channel: route_tracking:${routeId}`);
+          console.log(`Driver connected to broadcast channel: route_tracking:${routeId}`);
         }
       });
       channelRef.current = channel;
@@ -160,13 +187,13 @@ export default function DriverHomeScreen() {
         const sub = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.High,
-            timeInterval: 5000, 
-            distanceInterval: 10, 
+            timeInterval: 5000,
+            distanceInterval: 10,
           },
           (location) => {
             const { latitude, longitude, heading, speed } = location.coords;
-            console.log(`📡 GPS Update: Lat ${latitude}, Lng ${longitude}`);
-            
+            console.log(`GPS update: Lat ${latitude}, Lng ${longitude}`);
+
             if (channelRef.current) {
               channelRef.current.send({
                 type: 'broadcast',
@@ -178,25 +205,27 @@ export default function DriverHomeScreen() {
                   heading: heading || 0,
                   speed: speed || 0,
                   timestamp: Date.now(),
-                  status: 'en_ruta'
+                  status: 'en_ruta',
                 },
-              }).catch(err => console.error("Error broadcasting location:", err));
+              }).catch(err => console.error('Error broadcasting location:', err));
             }
-          }
+          },
         );
         setLocationSubscription(sub);
 
-        if (bgStatus === 'granted') {
-          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        const startLocationUpdatesAsync = (Location as Record<string, unknown>)
+          .startLocationUpdatesAsync as StartLocationUpdatesAsync | undefined;
+        if (!isWebRuntime && bgStatus === 'granted' && typeof startLocationUpdatesAsync === 'function') {
+          await startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             accuracy: Location.Accuracy.Balanced,
             timeInterval: 10000,
             distanceInterval: 50,
             showsBackgroundLocationIndicator: true,
             foregroundService: {
-              notificationTitle: "CartagoBuses",
-              notificationBody: "Transmitiendo tu ubicación GPS a los pasajeros",
-              notificationColor: "#10b981",
-            }
+              notificationTitle: 'Buses CR',
+              notificationBody: 'Transmitiendo tu ubicación GPS a los pasajeros',
+              notificationColor: '#10b981',
+            },
           });
         }
       } catch (error) {
@@ -231,15 +260,22 @@ export default function DriverHomeScreen() {
 
       <View style={styles.content}>
         <ThemedText style={styles.subtitle}>
-          {isTransmitting 
-            ? 'Transmitiendo ubicación a los pasajeros' 
+          {isTransmitting
+            ? 'Transmitiendo ubicación a los pasajeros'
             : 'Inicia la transmisión para compartir ubicación'}
         </ThemedText>
-        
-        <View style={[styles.statusContainer, { backgroundColor: softPanelColor }] }>
+
+        {locationError ? (
+          <View style={[styles.errorContainer, { backgroundColor: softPanelColor }]}>
+            <Ionicons name="warning-outline" size={18} color="#FFB347" />
+            <ThemedText style={styles.errorText}>{locationError}</ThemedText>
+          </View>
+        ) : null}
+
+        <View style={[styles.statusContainer, { backgroundColor: softPanelColor }]}>
           <View style={[
-            styles.statusIndicator, 
-            { backgroundColor: isTransmitting ? '#4CAF50' : '#FF5252' }
+            styles.statusIndicator,
+            { backgroundColor: isTransmitting ? '#4CAF50' : '#FF5252' },
           ]} />
           <ThemedText style={styles.statusText}>
             {isTransmitting ? 'Activo' : 'Inactivo'}
@@ -250,7 +286,7 @@ export default function DriverHomeScreen() {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isTransmitting ? '#FF5252' : '#4CAF50' }
+              { backgroundColor: isTransmitting ? '#FF5252' : '#4CAF50' },
             ]}
             onPress={toggleTransmission}
             activeOpacity={0.8}
@@ -267,7 +303,7 @@ export default function DriverHomeScreen() {
             onPress={startSimulation}
             activeOpacity={0.8}
           >
-            <Ionicons name="play-circle-outline" size={20} color="white" style={{marginRight: 8}} />
+            <Ionicons name="play-circle-outline" size={20} color="white" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>Simular Ruta a Taras</Text>
           </TouchableOpacity>
         )}
@@ -275,14 +311,14 @@ export default function DriverHomeScreen() {
         {isSimulating && (
           <TouchableOpacity
             style={[styles.button, { backgroundColor: '#FF5252', marginTop: 10 }]}
-            onPress={startSimulation} // using startSimulation here actually stops it because of the check
+            onPress={startSimulation}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Detener Simulación</Text>
+            <Text style={styles.buttonText}>Detener simulación</Text>
           </TouchableOpacity>
         )}
 
-        <View style={[styles.infoContainer, { backgroundColor: softPanelColor, marginTop: 20 }] }>
+        <View style={[styles.infoContainer, { backgroundColor: softPanelColor, marginTop: 20 }]}>
           <ThemedText style={styles.infoText}>
             Usa el modo simulación para ver cómo se mueve el bus en el mapa de pasajeros sin tener que desplazarte físicamente.
           </ThemedText>
@@ -369,6 +405,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  buttonIcon: {
+    marginRight: 8,
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -384,5 +423,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     opacity: 0.7,
+  },
+  errorContainer: {
+    width: '100%',
+    maxWidth: 320,
+    marginBottom: 20,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

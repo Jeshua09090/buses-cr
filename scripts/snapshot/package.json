@@ -1,0 +1,24 @@
+{
+  "name": "@busescr/snapshot-generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "snapshot:dev": "tsx src/index.ts",
+    "snapshot:verify": "tsx src/verify.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "17.3.1",
+    "minotor": "11.2.2",
+    "pg": "8.16.3",
+    "zod": "4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/pg": "8.16.0",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

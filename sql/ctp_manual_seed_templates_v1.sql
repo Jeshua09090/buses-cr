@@ -1,0 +1,88 @@
+set search_path = public, extensions;
+
+-- Plantillas manuales para alimentar la capa ligera de reglas sin tocar el staging oficial.
+-- Reemplaza los valores de ejemplo antes de ejecutar.
+
+-- 1) Preferir una parada para una variante concreta cuando el corredor compartido empate.
+-- insert into public.staging_ctp_preferred_stop_variant_links (
+--   stop_source_identifier,
+--   variant_code,
+--   weight,
+--   reason
+-- ) values (
+--   'PBA-30104-029',
+--   '0323-B-1',
+--   0.1800,
+--   'Parada real de abordaje validada en campo'
+-- );
+
+-- 2) Bloquear un falso positivo cuando la misma calle engancha la variante equivocada.
+-- insert into public.staging_ctp_blocked_stop_variant_links (
+--   stop_source_identifier,
+--   variant_code,
+--   reason
+-- ) values (
+--   'PBA-30104-029',
+--   '0300-L-2',
+--   'La parada queda del otro lado y este bus no recoge ahi'
+-- );
+
+-- 3) Definir un hub/terminal con llegada y salida reales.
+-- insert into public.staging_ctp_transfer_hub_rules (
+--   hub_key,
+--   hub_name,
+--   arrival_stop_identifier,
+--   departure_stop_identifier,
+--   from_route_code,
+--   from_variant_family_code,
+--   to_route_code,
+--   to_variant_family_code,
+--   walk_radius_m,
+--   transfer_penalty_seconds,
+--   priority,
+--   notes
+-- ) values (
+--   'cartago_lumaca_terminal',
+--   'Terminal Lumaca Cartago',
+--   'PBA-30101-100',
+--   'PBA-30101-101',
+--   '0323',
+--   '0323-B',
+--   '0300',
+--   '0300-L',
+--   160,
+--   90,
+--   10,
+--   'Transbordo caminando corto entre bajada y subida'
+-- );
+
+-- 4) Registrar un caso oro o una trampa misma-calle para medir mejora.
+-- insert into public.staging_ctp_gold_cases (
+--   case_label,
+--   case_type,
+--   origin_lat,
+--   origin_lng,
+--   destination_lat,
+--   destination_lng,
+--   expected_route_code,
+--   expected_variant_family_code,
+--   expected_direction_normalized,
+--   expected_board_stop_identifier,
+--   transfer_required,
+--   expected_hub_key,
+--   notes
+-- ) values (
+--   'Taras a terminal Cartago para conectar con San Jose',
+--   'gold',
+--   9.8712,
+--   -83.9337,
+--   9.8645,
+--   -83.9198,
+--   '0323',
+--   '0323-B',
+--   'ida',
+--   'PBA-30104-029',
+--   true,
+--   'cartago_lumaca_terminal',
+--   'Caso real usado para validar que el planner prefiera la bajada correcta'
+-- );

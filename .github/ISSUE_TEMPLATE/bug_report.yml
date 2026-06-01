@@ -1,0 +1,34 @@
+name: Bug report
+description: Report something broken or confusing in the app.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Tell us what you saw and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the screen, route, or command you used.
+      placeholder: |
+        1. Open...
+        2. Search...
+        3. See...
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: Android, iOS, web, or local script
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Logs, screenshots, route names, or anything else that helps.

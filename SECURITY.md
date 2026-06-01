@@ -1,39 +1,32 @@
-# Security Policy
+# Security
 
-Buses CR handles location-adjacent workflows, so security reports are taken
-seriously even while the project is early.
+Buses CR is an early-stage transit app, not a production transit authority
+system. Security work is handled in practical layers: keep secrets out of the
+repo, keep Supabase policies explicit, and make location-related risks visible
+before the app handles real passenger or driver data at scale.
 
-## Supported Versions
+## Reporting
 
-The public `main` branch is the only supported line for security reports.
+Please use GitHub Security Advisories for private reports when possible. If that
+is not available, open an issue with only non-sensitive details and say that you
+have a private security concern.
 
-## Reporting A Vulnerability
+## Current Notes
 
-Please do not open a public issue for secrets, token leaks, account compromise,
-or location/privacy vulnerabilities.
+- Public Expo variables are treated as publishable client config, not secrets.
+- Private tokens, local dumps, generated logs, and seed data should stay out of
+  Git.
+- Live bus positions currently use Supabase Realtime Broadcast while the app is
+  still in validation. Before production, driver authentication and channel
+  authorization should be tightened.
+- Route trace SQL is useful for data work, but GPS traces are sensitive. Any
+  production use should restrict read/update access to the right owners or admin
+  roles instead of broad authenticated access.
+- Old Mapbox or Supabase keys that were ever shared outside the repo should be
+  rotated rather than trusted.
+- Dependency checks currently gate high-severity advisories. Remaining moderate
+  Expo-chain advisories should be handled as part of a normal SDK upgrade, not
+  by forcing a major dependency jump inside a review branch.
 
-Use GitHub private vulnerability reporting if it is enabled for the repository.
-If it is not enabled, contact the maintainer through the GitHub profile for the
-repository owner and include:
-
-- affected file or flow
-- impact
-- reproduction steps
-- whether any secret, user data, or live location data is involved
-
-## Scope
-
-In scope:
-
-- exposed credentials or tokens
-- Supabase authorization or RLS mistakes
-- location privacy issues
-- unsafe driver/passenger data handling
-- dependency vulnerabilities with a concrete exploit path
-
-Out of scope:
-
-- scanner-only reports without impact
-- issues requiring access to accounts or systems you do not control
-- social engineering
-- denial-of-service testing against live services without permission
+This file is intentionally plain-spoken. It is a checklist for where the project
+is today, not a claim that the app has passed a formal security audit.

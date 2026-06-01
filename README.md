@@ -20,9 +20,9 @@ Buses CR combines three pieces of work:
 - route-planning experiments for Costa Rican bus trips, including transfer
   handling and ongoing RAPTOR runtime work
 
-The project is currently in an algorithm-first stage. Screenshots and polished
-marketing assets are intentionally secondary while the planner is being tuned
-against real local corridors and validation cases.
+The project is currently in an algorithm-first stage. Screenshots and videos are
+coming later; right now the important work is making the planner fast and honest
+against real local corridors.
 
 ## Why It Matters
 
@@ -76,6 +76,28 @@ mobile-friendly runtime:
 This matters because public transit routing must be fast enough for a phone and
 honest enough for real passengers.
 
+See [docs/raptor-runtime.md](./docs/raptor-runtime.md) for the current public
+runtime architecture and validation notes.
+
+## For Reviewers
+
+The repo is public while the app is still being shaped. The most useful review
+surface today is the RAPTOR runtime work, the validation scripts, and the way the
+mobile app keeps legacy planning available as a fallback.
+
+Useful checks from a clean clone:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run raptor:test
+npm run snapshot:test
+```
+
+Some commands need Supabase data or private environment variables. When that is
+the case, the docs should say so directly instead of hiding it behind a fake demo
+path.
+
 ## Getting Started
 
 Install dependencies:
@@ -105,6 +127,8 @@ Some features require project-specific environment variables and backend data:
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_GOOGLE_PLACES_KEY`
 - `RNMAPBOX_MAPS_DOWNLOAD_TOKEN`
+- `EAS_PROJECT_ID`, if you build through EAS
+- `EXPO_PUBLIC_PARTIAL_PLANNER_PROJECT_REFS`, only for maintainer fallback data
 
 A bare clone can run the app shell, but planner and live-fleet behavior depends
 on configured Supabase data and local validation fixtures.

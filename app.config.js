@@ -31,7 +31,7 @@ const config = {
     ],
   },
   web: {
-    output: 'static',
+    output: 'server',
     favicon: './assets/images/favicon.png',
   },
   plugins: [
@@ -54,10 +54,21 @@ const config = {
         RNMapboxMapsDownloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN ?? '',
       },
     ],
+    'expo-asset',
   ],
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    router: {},
+    ...(process.env.EAS_PROJECT_ID
+      ? {
+          eas: {
+            projectId: process.env.EAS_PROJECT_ID,
+          },
+        }
+      : {}),
   },
 };
 

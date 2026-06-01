@@ -7,8 +7,19 @@ export type RouteStop = {
 export type RouteDefinition = {
   id: string;
   name: string;
+  routeCode: string;
   path: [number, number][];
   stops: RouteStop[];
+};
+
+export type NearbyRouteStop = {
+  id: string;
+  stopName: string;
+  routeId: string;
+  routeName: string;
+  routeCode: string;
+  coordinate: [number, number];
+  distanceMeters: number;
 };
 
 const CARTAGO_TARAS_STOPS: RouteStop[] = [
@@ -70,17 +81,20 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
   {
     id: 'cartago_taras',
     name: 'Cartago - Taras',
+    routeCode: '300',
     path: CARTAGO_TARAS_ROUTE,
     stops: CARTAGO_TARAS_STOPS,
   },
   {
     id: 'cartago_paraiso',
+    routeCode: '304',
     name: 'Cartago - Paraíso',
     path: CARTAGO_PARAISO_PATH,
     stops: CARTAGO_PARAISO_STOPS,
   },
   {
     id: 'lumaca_sanjose',
+    routeCode: 'Lumaca',
     name: 'Lumaca - San José',
     path: LUMACA_SJ_PATH,
     stops: LUMACA_SJ_STOPS,
@@ -88,6 +102,14 @@ export const ROUTE_DEFINITIONS: RouteDefinition[] = [
 ];
 
 export function resolveRoute(routeId?: string | null, routeName?: string | null): RouteDefinition {
+  const normalizeMatch = (value?: string | null) =>
+    (value ?? '')
+      .trim()
+      .toLocaleLowerCase('es-CR')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '');
+
   if (routeId) {
     const byId = ROUTE_DEFINITIONS.find((route) => route.id === routeId);
     if (byId) return byId;
@@ -99,9 +121,56 @@ export function resolveRoute(routeId?: string | null, routeName?: string | null)
       (route) => route.name.trim().toLowerCase() === routeNameNormalized,
     );
     if (byName) return byName;
+
+    const fuzzyName = normalizeMatch(routeName);
+    const byFuzzyName = ROUTE_DEFINITIONS.find((route) => {
+      const normalizedRouteName = normalizeMatch(route.name);
+      const normalizedRouteCode = normalizeMatch(route.routeCode);
+      return (
+        normalizedRouteName.includes(fuzzyName) ||
+        fuzzyName.includes(normalizedRouteName) ||
+        normalizedRouteCode === fuzzyName
+      );
+    });
+    if (byFuzzyName) return byFuzzyName;
   }
 
   return ROUTE_DEFINITIONS[0];
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function haversineMeters(from: [number, number], to: [number, number]) {
+  const [lngFrom, latFrom] = from;
+  const [lngTo, latTo] = to;
+  const deltaLat = toRadians(latTo - latFrom);
+  const deltaLng = toRadians(lngTo - lngFrom);
+  const latFromRad = toRadians(latFrom);
+  const latToRad = toRadians(latTo);
+
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(latFromRad) * Math.cos(latToRad) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 6_371_000 * c;
+}
+
+export function findNearbyStops(userCoordinate: [number, number], limit = 4): NearbyRouteStop[] {
+  return ROUTE_DEFINITIONS.flatMap((route) =>
+    route.stops.map((stop) => ({
+      id: `${route.id}:${stop.id}`,
+      stopName: stop.name,
+      routeId: route.id,
+      routeName: route.name,
+      routeCode: route.routeCode,
+      coordinate: stop.coordinate,
+      distanceMeters: haversineMeters(userCoordinate, stop.coordinate),
+    })),
+  )
+    .sort((a, b) => a.distanceMeters - b.distanceMeters)
+    .slice(0, limit);
 }
 
 // Función para generar puntos intermedios y hacer que el movimiento sea fluido

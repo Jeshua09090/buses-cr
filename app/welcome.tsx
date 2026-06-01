@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
     if (role === 'passenger') {
       await setRole('passenger');
     } else {
-      // Navegamos al login en lugar de establecer el rol directamente
+      // Ask drivers to sign in before enabling live location tools.
       router.push('/driver-login');
     }
   };
@@ -24,7 +24,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Ionicons name="bus" size={80} color="#3b82f6" />
-          <ThemedText type="title" style={styles.title}>CartagoBuses</ThemedText>
+          <ThemedText type="title" style={styles.title}>Buses CR</ThemedText>
           <ThemedText style={styles.subtitle}>Tu app de transporte en Costa Rica</ThemedText>
         </View>
 
@@ -33,8 +33,8 @@ export default function WelcomeScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.button, styles.passengerButton]} 
+          <TouchableOpacity
+            style={[styles.button, styles.passengerButton]}
             onPress={() => handleChoice('passenger')}
             activeOpacity={0.8}
           >
@@ -45,8 +45,8 @@ export default function WelcomeScreen() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.button, styles.driverButton]} 
+          <TouchableOpacity
+            style={[styles.button, styles.driverButton]}
             onPress={() => handleChoice('driver')}
             activeOpacity={0.8}
           >
