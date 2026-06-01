@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve CartagoBuses.
+Thanks for helping improve Buses CR.
 
 This project is still early, so the best contributions are concrete and
 verifiable. Local knowledge is especially valuable.

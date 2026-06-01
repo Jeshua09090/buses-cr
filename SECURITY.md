@@ -1,6 +1,6 @@
 # Security Policy
 
-CartagoBuses handles location-adjacent workflows, so security reports are taken
+Buses CR handles location-adjacent workflows, so security reports are taken
 seriously even while the project is early.
 
 ## Supported Versions

@@ -1,6 +1,6 @@
-# CartagoBuses — Contexto del Proyecto
+# Buses CR — Contexto del Proyecto
 
-Este documento describe detalladamente la arquitectura, el stack tecnológico y el estado actual del proyecto CartagoBuses para facilitar la migración y dar contexto a los agentes de IA.
+Este documento describe detalladamente la arquitectura, el stack tecnológico y el estado actual del proyecto Buses CR para facilitar la migración y dar contexto a los agentes de IA.
 
 ---
 

@@ -1,7 +1,7 @@
 # RAPTOR Runtime
 
-CartagoBuses is moving trip planning away from slow database RPC calls and into
-an on-device transit runtime.
+Buses CR is moving trip planning away from slow database RPC calls and into an
+on-device transit runtime.
 
 The current public branch includes the first reviewable version of that work:
 

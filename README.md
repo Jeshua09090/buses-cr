@@ -1,17 +1,19 @@
-# CartagoBuses
+# Buses CR
 
-CartagoBuses is an open-source mobile transit project for Costa Rica, built with
-Expo, React Native, Mapbox, and Supabase.
+Buses CR is an open-source mobile transit project for Costa Rica, built with
+Expo, React Native, Mapbox, and Supabase. The goal is simple: make bus travel
+feel understandable for people who actually ride here.
 
 The project started in Cartago because that is where the first route data,
-planner cases, and live-bus experiments are deepest. The longer-term goal is a
-Costa Rica-wide public transit app that handles the local realities that generic
-map apps often miss: informal landmarks, overlapping route variants, ambiguous
-stops, transfer points, and limited official digital data.
+planner cases, and live-bus experiments are deepest. That local focus is the
+testing ground, not the boundary. The longer-term goal is a Costa Rica-wide
+public transit app that handles the realities generic map apps often miss:
+informal landmarks, overlapping route variants, ambiguous stops, transfer
+points, and limited official digital data.
 
 ## What It Is
 
-CartagoBuses combines three pieces of work:
+Buses CR combines three pieces of work:
 
 - a passenger-first mobile app with a dark, map-centered interface
 - driver/location tooling for live fleet visibility through Supabase Realtime
@@ -33,8 +35,8 @@ Useful trip planning requires more than drawing a route on a map:
 - transfer points may be obvious locally but invisible in raw data
 - live bus visibility is sparse outside a few polished commercial experiences
 
-CartagoBuses is built from that reality outward. The goal is practical transit
-guidance for local riders, not a generic demo map.
+Buses CR is built from that reality outward. The goal is practical transit
+guidance for local riders, not another generic demo map.
 
 ## Current Capabilities
 
@@ -42,7 +44,7 @@ guidance for local riders, not a generic demo map.
 - Mapbox-based full-screen passenger map
 - Supabase Realtime Broadcast for live bus position updates
 - driver simulation tooling for local fleet testing
-- route metadata and stop definitions for early Cartago corridors
+- route metadata and stop definitions for the first Cartago validation corridors
 - trip-search and journey presentation experiments
 - ongoing work on an in-memory RAPTOR planner fed by versioned transit snapshots
 - local validation scripts for comparing planner behavior across known cases

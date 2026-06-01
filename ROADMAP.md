@@ -1,12 +1,12 @@
 # Roadmap
 
-CartagoBuses is being built in small, validation-heavy steps. The goal is not to
+Buses CR is being built in small, validation-heavy steps. The goal is not to
 pretend the whole country is solved at once; it is to make each corridor more
 honest before widening coverage.
 
 ## Now
 
-- Improve route-planning quality for Cartago corridors.
+- Improve route-planning quality in the first Cartago validation corridors.
 - Validate the in-memory RAPTOR runtime against real local trips.
 - Keep live bus position updates lightweight with Supabase Realtime Broadcast.
 - Preserve a mobile-first map interface for passengers.
@@ -15,7 +15,7 @@ honest before widening coverage.
 ## Next
 
 - Publish clearer sample validation cases for planner behavior.
-- Expand route and stop coverage beyond the current Cartago-heavy focus.
+- Expand route and stop coverage beyond the current Cartago-heavy validation set.
 - Improve onboarding and environment setup for contributors.
 - Harden driver tracking flows and background location behavior.
 - Add more public documentation around transit data assumptions.
